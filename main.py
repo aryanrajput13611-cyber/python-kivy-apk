@@ -8,17 +8,18 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.label import Label
 from kivy.clock import mainthread
 
-# अपनी Gemini API Key यहाँ डालें
-API_KEY = "YOUR_GEMINI_API_KEY_HERE"
-API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+# आपकी दी गई API Key और URL
+API_KEY = "AQ.Ab8RN6JtT5ivAiBMhLbzuX6GKOtPXgIDqh08sLu6FTPHaaOXVg"
+API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
 
 class ChatApp(App):
     def build(self):
         self.layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
 
+        # चैट हिस्ट्री स्क्रीन
         self.scroll = ScrollView(size_hint=(1, 0.85))
         self.chat_history = Label(
-            text="[b]AI Agent:[/b] नमस्ते! मैं आपकी क्या मदद कर सकता हूँ?\n\n",
+            text="[b]AI Agent:[/b] नमस्ते! मैं आपकी क्या सहायता कर सकता हूँ?\n\n",
             markup=True,
             size_hint_y=None,
             halign='left',
@@ -29,9 +30,10 @@ class ChatApp(App):
         self.scroll.add_widget(self.chat_history)
         self.layout.add_widget(self.scroll)
 
+        # मैसेज टाइप करने की जगह और सेंड बटन
         bottom_layout = BoxLayout(size_hint=(1, 0.15), spacing=10)
         self.user_input = TextInput(
-            hint_text="अपना सवाल लिखें...",
+            hint_text="अपना सवाल यहाँ लिखें...",
             multiline=False,
             size_hint=(0.75, 1)
         )
@@ -57,10 +59,14 @@ class ChatApp(App):
         self.user_input.text = ""
         self.send_button.disabled = True
 
+        # बैकग्राउंड थ्रेड ताकि ऐप हैंग न हो
         threading.Thread(target=self.call_gemini, args=(prompt,)).start()
 
     def call_gemini(self, prompt):
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "X-goog-api-key": API_KEY
+        }
         payload = {
             "contents": [{"parts": [{"text": prompt}]}]
         }
@@ -70,7 +76,7 @@ class ChatApp(App):
                 result = response.json()
                 reply = result['candidates'][0]['content']['parts'][0]['text']
             else:
-                reply = f"Error: API status {response.status_code}"
+                reply = f"Error {response.status_code}: {response.text}"
         except Exception as e:
             reply = f"Connection Error: {str(e)}"
 
